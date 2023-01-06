@@ -1,0 +1,17 @@
+{
+  "AppVersion": "1.0.0.0",
+  "Title": "Starfield",
+  "Thumbnail": "zgnwendr.jpg",
+  "Preview": "vqxuyt4a.gif",
+  "Desc": "Particles (stars) flowing gently in a Perlin Noise field.",
+  "Author": "HaLo2FrEeEk",
+  "License": null,
+  "Contact": "",
+  "Type": 1,
+  "FileName": "index.html",
+  "Arguments": "",
+  "IsAbsolutePath": false,
+  "Id": null,
+  "Tags": null,
+  "Version": 0
+}
