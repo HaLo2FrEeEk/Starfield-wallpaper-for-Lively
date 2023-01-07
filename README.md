@@ -3,4 +3,4 @@ Particles (or stars) flowing smoothly and endlessly in a Perlin Noise field. Ver
 
 ![](vqxuyt4a.gif)
 
-[Download the ZIP file](Starfield.zip), drop it into Lively.
+[Download the ZIP file](https://github.com/HaLo2FrEeEk/Starfield-wallpaper-for-Lively/releases), drop it into Lively.
