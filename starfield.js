@@ -1,36 +1,27 @@
-/*
-To Do:
-
-Fade out on death, don't just disappear
-Cache noise values...somehow
-*/
-
 function  Starfield(opts) {
-  let _sf = this;
-	_sf.opts = opts;
-	_sf.zoff = random(100, 200);
-	_sf.stars = [];
+	this.opts = opts;
+	this.zoff = random(100, 200);
+	this.stars = [];
 	
-  _sf.populate = function(i = 0) {
-    for(i; i < _sf.opts.count; i++) {
-      _sf.stars[i] = new Star();
+  this.populate = function(i = 0) {
+    for(i; i < this.opts.count; i++) {
+      this.stars[i] = new Star();
     }
   }
   
-  _sf.update = function() {
-		for(var i = 0; i < _sf.opts.count; i++) {
-			_sf.stars[i].step();
+  this.update = function() {
+		for(var i = 0; i < this.opts.count; i++) {
+			this.stars[i].step();
 		}
     
-    _sf.zoff += _sf.opts.frozen ? 0 : _sf.opts.dZ;
+    this.zoff += this.opts.frozen ? 0 : this.opts.dZ;
   }
 }
 
 function Star() {
 	Star.prototype.spawn = function() {
-		this.pos = createVector(random(0, width), random(0, height));
-		this.dir = createVector(0, 0);
-		this.cd = starfield.opts.size;
+		this.pos = {x: random(0, width), y: random(0, height)};
+		this.dir = {x: 0, y: 0};
 		this.oob = starfield.opts.trailLen;
 		this.age = random(0, starfield.opts.maxAge);
 		this.prevpos = 0;
@@ -40,11 +31,6 @@ function Star() {
 	Star.prototype.step = function() {
 		this.noise = this.noiseAt();
 		
-		if(this.cd > 0) {
-			this.cd -= this.noise;
-			if(this.cd < 0) this.cd = 0;
-		}
-		
 		this.draw();
 		this.move();
 		
@@ -53,12 +39,13 @@ function Star() {
 	}
 	
 	Star.prototype.move = function() {
+		this.prevpos = {x: this.pos.x, y: this.pos.y};
 		this.dir.x += starfield.opts.speed * cos(this.noise * (360 + 180));
 		this.dir.y += starfield.opts.speed * sin(this.noise * (360 + 180));
-		this.dir.mult(starfield.opts.dSpeed * this.noise);
-		
-		this.prevpos = {x: this.pos.x, y: this.pos.y};
-		this.pos.add(this.dir);
+		this.dir.x *= this.noise;
+		this.dir.y *= this.noise;
+		this.pos.x += this.dir.x;
+		this.pos.y += this.dir.y;
 		
 		if(this.pos.x < -starfield.opts.size ||	this.pos.x > width + starfield.opts.size ||
 			this.pos.y < -starfield.opts.size || this.pos.y > height + starfield.opts.size)	{
@@ -75,8 +62,7 @@ function Star() {
 	}
 	
 	Star.prototype.draw = function() {
-		var sw = (starfield.opts.size - this.cd) * this.noise;
-		strokeWeight(sw);
+		strokeWeight(starfield.opts.size * this.noise);
 		stroke(this.colorAt());
 		beginShape();
 		vertex(this.pos.x, this.pos.y);
@@ -91,22 +77,17 @@ function Star() {
 			zoff);
 	}
 	
-	Star.prototype.colorAt = function(am = null) {
+	Star.prototype.colorAt = function() {
 		var hue = Array.from(starfield.opts.hsl);
 		if(starfield.opts.rainbow) {
-			hue[0] = ((hue[0] - 180) + (360 * this.noise)) % 360;
+			hue[0] = ((hue[0] - 180) + (720 * this.noise)) % 360;
 		} else {
 			hue[0] = ((hue[0] + 60) - (120 * this.noise)) % 360;
 		}
 		hue[3] = (hue[3] / 2) + (hue[3] / 2) * this.noise;
-		hue[3] *= am || 1;
 		return hue;
 	}
 
 	this.spawn();
 	this.move();
 	}
-
-
-
-
