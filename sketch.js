@@ -1,13 +1,9 @@
-const queryString = window.location.search;
-const params = new URLSearchParams(queryString);
-
 let showfr = false;
 let fr = [];
 let mspf = [];
 let timer = new Timer();
 let starfield;
 let fade = .05;
-let firstload = true;
 let opts = {
 	"count": 5000,
 	"hsl": [332, 100, 52.94, 1],
@@ -49,10 +45,6 @@ function livelyPropertyListener(name, val) {
 		case "color":
 			var c = color(val);
 			starfield.opts.hsl = [hue(c), saturation(c), lightness(c), 1];
-			background(starfield.opts.hsl);
-			for(var i = 0; i < 100; i++) {
-				background(0, fade);
-			}
 		break;
 		case "rainbow":
 			starfield.opts.rainbow = val;
@@ -65,14 +57,13 @@ function livelyPropertyListener(name, val) {
 		break;
 		case "showfr":
 			showfr = val;
-			if(!val && !firstload) {
+			if(!val && frameCount != 0) {
 				fill(opts.hsl);
 				rect(0, 0, 302, 52);
 				fill(0, fade);
 				for(var i = 0; i < 100; i++) {
 					rect(0, 0, 302, 52);
 				}
-				
 			}
 		break;
 	};
@@ -93,7 +84,7 @@ function setup() {
   starfield.populate();
   
 	background(starfield.opts.hsl);
-	for(var i = 0; i < 100; i++) {
+	for(var i = 0; i < 70; i++) {
 		background(0, fade);
 	}
 }
@@ -106,24 +97,21 @@ function draw() {
 	
 	// Show Framerate
 	if(showfr && frameCount > 1) {
-		fr.push(frameRate());
-		if(fr.length > 100) fr.shift();
 		mspf.push(timer.end());
+		fr.push(frameRate());
 		if(mspf.length > 100) mspf.shift();
+		if(fr.length > 100) fr.shift();
 		
 		strokeWeight(2);
 		fill(0);
 		rect(0, 0, 300, 50);
-		
 		noStroke();
 		fill(starfield.opts.hsl);
-		var debug = (Math.round((fr.reduce((s, e) => s + e) / fr.length) * 100) / 100) + " fps / ";
-		debug		 += Math.round(mspf.reduce((s, e) => s + e) / mspf.length) + " mspf";
-		text(debug, 10, 35);
+		var fps = (Math.round((fr.reduce((s, e) => s + e) / fr.length) * 100) / 100) + " fps / ";
+		fps			+= Math.round(mspf.reduce((s, e) => s + e) / mspf.length) + " mspf";
+		text(fps, 10, 35);
 		noFill();
 	}
-	
-	if(firstload) firstload = false;
 }
 
 //
