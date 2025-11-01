@@ -1,23 +1,28 @@
-let showfr = false;
-let fr = [];
-let mspf = [];
-let timer = new Timer();
-let starfield;
-let fade = .05;
-let opts = {
-	"count": 5000,
-	"hsl": [332, 100, 52.94, 1],
-	"size": 1,
-	"speed": 3,
-	"dSpeed": 0.98,
-	"dZ": 0.01,
-	"trailLen": 20,
-	"maxAge": 96,
-	"res": 4,
-	"screenRatio": 0,
-	"rainbow": false,
-	"frozen": false
-};
+let starfield,
+		showtime = false,
+		showseconds = false,
+		showampm = false,
+		time24 = false,
+		fade = .05,
+		framerate = 15,
+		mspf = 0,
+		mspf_arr = [],
+		opts = {
+			"count": 5000,
+			"hex": "#AD0A56",
+			"size": 1,
+			"speed": 3,
+			"maxAge": 96,
+			"res": 4,
+			"rainbow": false,
+			"frozen": false,
+			
+			"fioThreshold": 0.21,
+			"dSpeed": 0.98,
+			"dZ": 0.01,
+			"trailLen": 20,
+			"screenRatio": 0
+		};
 
 function livelyPropertyListener(name, val) {
 	switch(name) {
@@ -36,6 +41,9 @@ function livelyPropertyListener(name, val) {
 		case "size":
 			starfield.opts.size = val;
 		break;
+		case "fade":
+			fade = val;
+		break;
 		case "maxAge":
 			starfield.opts.maxAge = val;
 		break;
@@ -43,8 +51,11 @@ function livelyPropertyListener(name, val) {
 			starfield.opts.res = val;
 		break;
 		case "color":
-			var c = color(val);
-			starfield.opts.hsl = [hue(c), saturation(c), lightness(c), 1];
+			starfield.opts.hex = val;
+			starfield.opts.color = color(val);
+			hue(starfield.opts.color);
+			saturation(starfield.opts.color);
+			lightness(starfield.opts.color)
 		break;
 		case "rainbow":
 			starfield.opts.rainbow = val;
@@ -52,86 +63,89 @@ function livelyPropertyListener(name, val) {
 		case "frozen":
 			starfield.opts.frozen = val;
 		break;
-		case "refresh":
-			location.reload();
+		case "showtime":
+			showtime = val;
 		break;
-		case "showfr":
-			showfr = val;
-			if(!val && frameCount != 0) {
-				fill(opts.hsl);
-				rect(0, 0, 302, 52);
-				fill(0, fade);
-				for(var i = 0; i < 100; i++) {
-					rect(0, 0, 302, 52);
-				}
-			}
+		case "showseconds":
+			showseconds = val;
+		break;
+		case "24hr":
+			time24 = val;
+		break;
+		case "showampm":
+			showampm = val;
+		break;
+		case "reload":
+			window.location.reload();
 		break;
 	};
 }
 
 function setup() {
-  let canv = createCanvas(window.innerWidth, window.innerHeight);
+  var canv = createCanvas(window.innerWidth, window.innerHeight);
 	canv.elt.addEventListener("contextmenu", (e) => e.preventDefault());
-  frameRate(12);
+  frameRate(framerate);
   noFill();
   noStroke();
   angleMode(DEGREES);
 	colorMode(HSL);
-	textSize(30);
+	drawingContext.lineCap = "round";
 	
 	opts.screenRatio = width / height;
+	opts.color = color(opts.hex);
+	hue(opts.color);
+	saturation(opts.color);
+	lightness(opts.color);
+	background(opts.color);
+	drawingContext.globalAlpha = fade;
+	for(var i = 0; i < 70; i++) {
+		background(0);
+	}
 	starfield = new Starfield(opts);
   starfield.populate();
-  
-	background(starfield.opts.hsl);
-	for(var i = 0; i < 70; i++) {
-		background(0, fade);
-	}
 }
 
 function draw() {
-	background(0, fade);
-	timer.start();
+	var date = Date.now();
+	drawingContext.globalAlpha = fade;
+	background(0);
+	drawingContext.globalAlpha = 1.0;
   
   starfield.update();
 	
-	// Show Framerate
-	if(showfr && frameCount > 1) {
-		mspf.push(timer.end());
-		fr.push(frameRate());
-		if(mspf.length > 100) mspf.shift();
-		if(fr.length > 100) fr.shift();
-		
-		strokeWeight(2);
-		fill(0);
-		rect(0, 0, 300, 50);
-		noStroke();
-		fill(starfield.opts.hsl);
-		var fps = (Math.round((fr.reduce((s, e) => s + e) / fr.length) * 100) / 100) + " fps / ";
-		fps			+= Math.round(mspf.reduce((s, e) => s + e) / mspf.length) + " mspf";
-		text(fps, 10, 35);
-		noFill();
-	}
+	// Show time
+	if(showtime) drawTime();
+	
+	if(mspf_arr.unshift(Date.now() - date) > framerate) mspf_arr.pop();
+	mspf = mspf_arr.reduce((a, e) => a + e, 0) / mspf_arr.length;
 }
 
-//
-// Timer
-//
-function Timer() {
-	this.s = 0;
-	this.e = 0;
+function drawTime() {
+	let d = new Date();
+	let h = time24 ? d.getHours() : (d.getHours() % 12) || 12;
+	if(time24) h = h.toString().padStart(2, '0');
+	let time = `${h}:${d.getMinutes().toString().padStart(2, '0')}`;
+	rectMode(CORNERS);
+	textAlign(RIGHT, BOTTOM);
+	textSize(98);
+	noStroke();
+	fill(64, fade);
+	text(time, 0, 0, width - 98, height - 49);
 	
-	this.start = function() {
-		this.s = Date.now();
-		return this.s;
+	if(showampm && !time24) {
+		time = d.getHours() - 12 < 0 ? "AM" : "PM";
+		textSize(35);
+		text(time, 0, 0, width - 38, height - 84 - 24);
 	}
 	
-	this.end = function() {
-		this.e = Date.now();
-		return this.results();
-	}
-	
-	this.results = function() {
-		return (this.e - this.s);
+	if(showseconds) {
+		let min = d.getMinutes() % 2;
+		let angle = (d.getSeconds() || (min ? 0 : 60)) * 6;
+		let start_angle = (min ? 0 : angle) - 90;
+		let end_angle = (min ? angle : 0) - 90;
+		let center_x = width - 63;
+		let center_y = height - (time24 ? 105 : 89);
+		let size = 35 + (time24 ? 21 : 0);
+		arc(center_x, center_y, size, size, start_angle, end_angle);
 	}
 }
