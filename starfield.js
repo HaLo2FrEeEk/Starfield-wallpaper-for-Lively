@@ -32,10 +32,10 @@ class Star {
 	}
 	
 	spawn() {
-		this.pos = {x: random(0, width), y: random(0, height)};
 		this.dir = {x: 0, y: 0};
+		this.pos = {x: random(0, width), y: random(0, height)};
 		this.prevpos = 0;
-		this.age = ~~random(0, starfield.opts.maxAge / 2);
+		this.age = ~~random(0, starfield.opts.maxAge * 0.42);
 		this.birthAge = this.age;
 		this.noise = 0;
 		this.oob = starfield.opts.trailLen;
@@ -51,11 +51,12 @@ class Star {
 	}
 	
 	move() {
+		let rotMult = 3;
 		this.prevpos = {x: this.pos.x, y: this.pos.y};
-		this.dir.x += starfield.opts.speed * cos(this.noise * 360 * 3);
-		this.dir.y += starfield.opts.speed * sin(this.noise * 360 * 3);
-		this.dir.x *= this.noise;
-		this.dir.y *= this.noise;
+		this.dir.x = cos(this.noise * 360 * rotMult);
+		this.dir.y = sin(this.noise * 360 * rotMult);
+		this.dir.x *= starfield.opts.speed * starfield.opts.screenRatio * this.noise;
+		this.dir.y *= starfield.opts.speed * starfield.opts.screenRatio * this.noise;
 		this.pos.x += this.dir.x;
 		this.pos.y += this.dir.y;
 		
@@ -72,7 +73,7 @@ class Star {
 	
 	draw() {
 		let c = this.colorAt();		
-		drawingContext.lineWidth = starfield.opts.size + this.speedNow() * this.noise;
+		drawingContext.lineWidth = starfield.opts.size * (0.3 + 0.7 * this.noise);
 		drawingContext.strokeStyle = `hsla(${c[0]}, ${c[1]}%, ${c[2]}%, ${c[3] * 100}%)`;
 		drawingContext.beginPath();
 		drawingContext.moveTo(this.prevpos.x, this.prevpos.y);
@@ -88,11 +89,11 @@ class Star {
 	}
 	
 	ageFalloff() {
-		let ap = (this.age - this.birthAge) / (starfield.opts.maxAge - this.birthAge);
-		return (ap < starfield.opts.fioThreshold)
-			? ap / starfield.opts.fioThreshold
-			: (1 - ap < starfield.opts.fioThreshold)
-				? (1 - ap) / starfield.opts.fioThreshold
+		let agePercent = (this.age - this.birthAge) / (starfield.opts.maxAge - this.birthAge);
+		return (agePercent < starfield.opts.fioThreshold)
+			? agePercent / starfield.opts.fioThreshold
+			: (1 - agePercent < starfield.opts.fioThreshold)
+				? (1 - agePercent) / starfield.opts.fioThreshold
 				: 1
 	}
 	
@@ -101,16 +102,12 @@ class Star {
 		let h = c.hsla[0] * 360;
 		h = starfield.opts.rainbow
 			? ((h - 180) + (720 * this.noise)) % 360
-			: ((h + 60) - (120 * this.noise)) % 360
-		let r = [h, c.hsla[1] * 100, c.hsla[2] * 100, (0.5 + 0.5 * this.noise) * this.ageFalloff()];
-		return r;
+			: ((h + 60) - (120 * this.noise)) % 360;
+		return [h, c.hsla[1] * 100 * (0.8 + 0.2 * this.noise), c.hsla[2] * 100, this.ageFalloff()];
 	}
 	
 	speedNow() {
 		return Math.sqrt(Math.pow(this.pos.x - this.prevpos.x, 2) + Math.pow(this.pos.y - this.prevpos.y, 2)) || 1;
 	}
 }
-
-
-
 
