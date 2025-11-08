@@ -71,10 +71,9 @@ class Star {
 		}
 	}
 	
-	draw() {
-		let c = this.colorAt();		
+	draw() {	
 		drawingContext.lineWidth = starfield.opts.size * (0.3 + 0.7 * this.noise);
-		drawingContext.strokeStyle = `hsla(${c[0]}, ${c[1]}%, ${c[2]}%, ${c[3] * 100}%)`;
+		drawingContext.strokeStyle = this.colorAt();
 		drawingContext.beginPath();
 		drawingContext.moveTo(this.prevpos.x, this.prevpos.y);
 		drawingContext.lineTo(this.pos.x, this.pos.y);
@@ -98,12 +97,25 @@ class Star {
 	}
 	
 	colorAt() {
+		let precision = 1;
 		let c = starfield.opts.color;
 		let h = c.hsla[0] * 360;
 		h = starfield.opts.rainbow
 			? ((h - 180) + (720 * this.noise)) % 360
 			: ((h + 60) - (120 * this.noise)) % 360;
-		return [h, c.hsla[1] * 100 * (0.8 + 0.2 * this.noise), c.hsla[2] * 100, this.ageFalloff()];
+		h = round_(h, 0);
+		let s = round_(c.hsla[1] * 100 * (0.8 + 0.2 * this.noise), precision);
+		let l = round_(c.hsla[2] * 100, precision);
+		let af = round_(this.ageFalloff(), precision);
+		
+		const key = `${h},${s},${l},${af}`;
+		let rgba = colorCache.get(key);
+		if(!rgba) {
+			rgba = color(h, s, l, af).toString();
+			colorCache.set(key, rgba);
+		}
+		
+		return rgba;
 	}
 	
 	speedNow() {

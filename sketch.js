@@ -1,3 +1,5 @@
+const colorCache = new Map();
+
 let starfield,
 		showtime = false,
 		showseconds = false,
@@ -12,7 +14,7 @@ let starfield,
 			"hex": "#AD0A56",
 			"size": 1,
 			"speed": 1,
-			"maxAge": 96,
+			"maxAge": 192,
 			"res": 4,
 			"rainbow": false,
 			"frozen": false,
@@ -149,3 +151,8 @@ function drawTime() {
 		arc(center_x, center_y, size, size, start_angle, end_angle);
 	}
 }
+
+function round_(i, d) {
+    return ~~(i * Math.pow(10, d)) / Math.pow(10, d);
+}
+
